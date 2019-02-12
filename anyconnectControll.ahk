@@ -189,18 +189,6 @@ Disconnect:
 	SB_SetText("Disconnected from VPN.")
 return
 
-; ShrewSoft VPN Client Connect
-STmolab1VPN:
-	Run C:\cmd\appstarter\stmolabVPN.bat
-	MsgBox , , ShrewSoft VPN Client connection, Connected to TMO NVQALab1 VPN, %msgboxDelay%
-return
-
-; ShrewSoft VPN Client Disconnect
-STmolab1VPNDisconnect:
-	Run taskkill.exe /IM ipsecc.exe
-	MsgBox , , ShrewSoft VPN Client connection, Disconnected from TMO NVQALab1 VPN, %msgboxDelay%
-return
-
 ; generic CiscoAnyConnect Service Restart
 RestartService:
 	if ( CHECKPROFILE = "yes" ) {
@@ -399,7 +387,7 @@ StartFunction( CtrlVarName )
 	return
 
 /*
-TODO: I actually need to find a way to dinamically assing key bindings for each loaded VPN profile
+TODO: I actually need to find a way to dynamically assign key bindings for each loaded VPN profile
 currently, this doesn't work
  */
 

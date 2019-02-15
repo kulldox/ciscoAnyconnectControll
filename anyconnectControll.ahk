@@ -77,7 +77,7 @@ guiLogWindowId := ""
 ini_getsectiontext(iniFile, theSection) {
 
 	IniRead, INIall, %iniFile%, %theSection%
-	MsgBox % INIall
+	; MsgBox % INIall
 	tmpArr := StrSplit(INIall, "`n")
 	for index, element in tmpArr
 	{

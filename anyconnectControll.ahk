@@ -62,6 +62,7 @@ global NRFAILEDRETRIES := 50
 global PAUSETIME := 1
 global CHECKPROFILE := "yes"
 global RESTARTSERVICEFLAG := 0
+global CONNECTWINDOWWAITSLEEP := 1500
 
 global VPNPROFILEBACKUP := "C:\bkp\anyconnect\asOfAug72017\AnyConnect-General-Client-mct-custom-Profile.xml"
 global APPVIPPATH := "C:\Program Files (x86)\Symantec\VIP Access Client\"
@@ -118,7 +119,6 @@ ini_profiles(iniFile, theSection) {
 }
 
 global iniExtractedProfiles := ini_profiles(iniFileFullPath,"profile_")
-
 Gui, +LastFound
 initialYval := -29
 if ( iniExtractedProfiles.Length() > 0 ) {
@@ -131,8 +131,13 @@ if ( iniExtractedProfiles.Length() > 0 ) {
 		; MsgBox , , Debug Log, % element
 		; MsgBox , , Debug Log, vConnect2VPN%index%#%element%
 		Gui, Add, Text, x12 y%yVal% w170 h20 , % TITLENAME " (" index ")"
-		Gui, Add, Button, vConnect2VPN%index%#%element% gExec x192 y%yVal% w110 h20, Connect
+		Gui, Add, Button, vConnect2VPN%index%#%element%#%index% gExec x192 y%yVal% w110 h20, Connect (Ctrl+%index%)
+		keyCombination = ~^%index%
+		Hotkey, %keyCombination%, startProfileViaHK, On
+
+		; Gui, Add, Button, vConnect2VPN%index%#%element% gExec x192 y%yVal% w110 h20, Connect ;(Ctrl+%index%)
 		Gui, Add, Button, x312 y%yVal% w110 h20 gDisconnect, Disconnect (Ctrl+0)
+	; return
 	}
 } else {
 	Gui, Add, Text, x12 y19 w170 , % "There are no profiles to load in " iniFileFullPath
@@ -142,12 +147,10 @@ Gui, Add, Edit, x12 y109 w409 h200 vStatusWindow,
 Gui, Add, StatusBar,,
 ; Generated using SmartGUI Creator 4.0
 Gui, Show, x194 y107 h330 w439, Cisco Anyconnect Manager
-
 return
 
 ; TheSubs
 Exec:
-	; MsgBox % A_GuiControl A_ThisLabel
     StartFunction( A_GuiControl )
 Return
 
@@ -189,6 +192,18 @@ Disconnect:
 	SB_SetText("Disconnected from VPN.")
 return
 
+; ShrewSoft VPN Client Connect
+STmolab1VPN:
+	Run C:\cmd\appstarter\stmolabVPN.bat
+	MsgBox , , ShrewSoft VPN Client connection, Connected to TMO NVQALab1 VPN, %msgboxDelay%
+return
+
+; ShrewSoft VPN Client Disconnect
+STmolab1VPNDisconnect:
+	Run taskkill.exe /IM ipsecc.exe
+	MsgBox , , ShrewSoft VPN Client connection, Disconnected from TMO NVQALab1 VPN, %msgboxDelay%
+return
+
 ; generic CiscoAnyConnect Service Restart
 RestartService:
 	if ( CHECKPROFILE = "yes" ) {
@@ -209,6 +224,7 @@ RestartService:
 		Sleep, 1000
 	}
 return
+
 
 GuiClose:
 ExitApp
@@ -243,12 +259,12 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 		Run, %comspec% /c "%APPVIPPATH%VIPUIManager.exe",,Hide,
 		log("Ends: starting VIPUIManager.exe")
 	}
-	Sleep, 500
+	Sleep, CONNECTWINDOWWAITSLEEP
 	log("Start: starting vpnui.exe")
 	Run, %comspec% /c "%APPPATH%vpnui.exe",,Hide,
 	log("End: starting vpnui.exe")
 	; MsgBox , , Cisco Anyconnect VPN Client connection, Connected to TMO Production VPN, %msgboxDelay%
-	Sleep, 500
+	Sleep, CONNECTWINDOWWAITSLEEP
 	log("Start: starting '" . i_vpnProfileNname . "' Connection")
 	; SetTimer, ProductionVPNConnect, 100
 
@@ -259,13 +275,13 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 	WinWaitActive, ahk_exe vpnui.exe
 	; WinWaitActive, %anyconnectWindowTitleName%
 	SB_SetText("Select VPN Profile '" . i_vpnProfileNname . "'")
-	Sleep, 500
+	Sleep, CONNECTWINDOWWAITSLEEP
 	Control, ChooseString , %i_vpnProfileNname%, ComboBox1, %anyconnectWindowTitleName%
 	ControlSetText, Edit1, %i_vpnProfileNname%, %anyconnectWindowTitleName%
 
     ; ############ Step 2
 	; Enter VPN username and password
-	Sleep, 500
+	Sleep, CONNECTWINDOWWAITSLEEP
 	SetControlDelay -1
 	WinWaitActive, %i_vpnWindowTitleNname%
 	SB_SetText("Provide user/pass for '" . i_vpnUser . "'")
@@ -273,14 +289,14 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 	log("user/pass: '" . i_vpnUser . "'/'" . i_vpnPass . "'")
 	ControlSetText, Edit1, %i_vpnUser%, %i_vpnWindowTitleNname%
 	ControlSetText, Edit2, %i_vpnPass%, %i_vpnWindowTitleNname%
-	Sleep, 1000
+	Sleep, CONNECTWINDOWWAITSLEEP
 	SB_SetText("Click Connect button.")
 	SetControlDelay -1
 	ControlClick , Button1, %i_vpnWindowTitleNname%,,,, NA
     if ( hasVIP != 0 ) {
 	    ; ############ Step 3
 	    ; Enter the Symactec VIP token
-		Sleep, 1000
+		Sleep, CONNECTWINDOWWAITSLEEP
 		SB_SetText("Fill in the SymantecVIPAccess Token.")
 		log("Fill in the SymantecVIPAccess Token.")
 		WinWaitActive, %i_vpnProfileNname%
@@ -295,7 +311,7 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
     if ( hasBanner != 0 ) {
 	    ; ############ Step 4
 	    ; Click Accept button for the banner
-		Sleep, 1000
+		Sleep, CONNECTWINDOWWAITSLEEP
 	    log("'Accept' the Banner.")
 	    SB_SetText("'Accept' the Banner.")
 		WinWaitActive, Cisco AnyConnect
@@ -306,7 +322,7 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 	    SB_SetText("Accepted Banner.")
 	}
 
-	Sleep, 500
+	Sleep, CONNECTWINDOWWAITSLEEP
 	WinWaitActive, %anyconnectWindowTitleName%
 	successfullyConnected := "no"
 	tempLoginStatus := ""
@@ -331,7 +347,7 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 	    	SB_SetText("Connected to " . i_vpnProfileNname . ".")
 	    	break
 		}
-		Sleep, 1000
+		Sleep, CONNECTWINDOWWAITSLEEP
 		tempLoginStatus := LoginStatus
 		if ( NRFAILEDRETRIES <= A_Index ) {
 			log("Reached number of MAX Retries " . NRFAILEDRETRIES . ". Exit.")
@@ -352,6 +368,30 @@ CiscoAnyConnectAutoConnect(i_vpnUser, i_vpnPass, i_vpnProfileNname, i_vpnWindowT
 	SB_SetText("Connected to " . i_vpnProfileNname . ".")
 }
 
+; Function to extract functionName from a variable pasted from GUI
+; example variable: vMyFunctionName#param1#param2
+getFuncName( CtrlVarName )
+{
+    ; Extract function name and parameter
+    If ( RegExMatch( CtrlVarName, "U)([^\#].*)#", function ) ) {
+    	functionName := SubStr(function, 1, StrLen(function)-2)
+    	return functionName
+    }
+    Else
+        return false
+}
+; Function to extract params from a variable pasted from GUI
+; example variable: vMyFunctionName#param1#param2
+getParams( CtrlVarName )
+{
+    ; Extract function name and parameter
+    If ( RegExMatch( CtrlVarName, "#([\w#]+)", reMatch ) ) {
+    	StringSplit,Param,reMatch1,#
+    	return Param
+    }
+    Else
+        return false
+}
 ; Function starter
 ; a hack for the GUI limitation (unable to call a function on Button click)
 StartFunction( CtrlVarName )
@@ -360,24 +400,37 @@ StartFunction( CtrlVarName )
     local Param0,Param1,Param2,Param3,Param4
     ; MsgBox %	A_ThisFunc ":"  CtrlVarName
     ; Extract function name and parameter
-    If ( RegExMatch( CtrlVarName, "([^\#].*)#", function ) 
+    If ( RegExMatch( CtrlVarName, "U)([^\#].*)#", function ) 
       && RegExMatch( CtrlVarName, "#([\w#]+)", reMatch ) )
         StringSplit,Param,reMatch1,#
     
+    ; MsgBox %	A_ThisFunc ":"  Param1
     ; Execute
     functionName := SubStr(function, 1, StrLen(function)-2)
-    log("End: triggering " . functionName . " with " . Param1 . " param")
+    log("End: triggering " . functionName . " with " . Param1 . " param." . "param2: " . Param2)
     ; MsgBox %	A_ThisFunc ":"  CtrlVarName "-" functionName ":> " Param1
     If ( IsFunc(functionName) ) {
     	; MsgBox %functionName%( %Param1%, %Param2%, %Param3%, %Param4% )
+		; MsgBox You pressed %A_ThisHotkey%.
+    	; Hotkey, ~^%Param2%, %functionName%( Param1, Param2, Param3, Param4 ), On
+    	; return
         return %functionName%( Param1, Param2, Param3, Param4 )
     }
     Else
         return false
 }
 
+; This label is used to call from dynamic Hotkeys devined during loading of the GUI
+startProfileViaHK:
+	RegExMatch( A_ThisHotkey, "U)\^([0-9]+)", extractedIndexNumber )
+	indexNumber := SubStr(extractedIndexNumber, 2, StrLen(extractedIndexNumber))
+	; MsgBox,% A_ThisLabel "`n" A_ThisHotkey  "`n" inputString "`n" indexNumber
+	Connect2VPN(iniExtractedProfiles[indexNumber])
+return
+
 
 #IfWinActive, Cisco Anyconnect Manager
+
 ; Ctrl + 0
 	~^0:: Gosub, Disconnect
 	return
@@ -385,22 +438,6 @@ StartFunction( CtrlVarName )
 ; Ctrl + Shift + 0
 	~^+0:: Gosub, STmolab1VPNDisconnect
 	return
-
-/*
-TODO: I actually need to find a way to dynamically assign key bindings for each loaded VPN profile
-currently, this doesn't work
- */
-
-; for index, element in iniExtractedProfiles
-; {
-; 	vpnProfileName := SubStr(element, 9)
-
-; Ctrl + 1
-	; ~^{%index%}:: Gosub, %vpnProfileName%
-	; return
-	
-; }
-
 
 #IfWinActive
 

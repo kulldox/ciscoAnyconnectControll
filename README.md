@@ -2,6 +2,8 @@
 An AHK script to automate connecting to multiple VPN Profiles via Cisco Anyconnect.
 It also can automatically copy the security token from Symantec VIP and also click accept on the banner displayed by Cisco Anyconnect.
 
+Basically to replace [anyconnectVPNswitcher](https://github.com/kulldox/anyconnectVPNswitcher) based on batch scripts.
+
 Install:
 1) Have [AHK](https://www.autohotkey.com/) installed on you windows box
 2) Copy the ```anyconnectControll.ahk``` to ```C:\Users\Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup```

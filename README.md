@@ -10,5 +10,7 @@ Install:
 3) Copy ```anyconnectControll-Sample.ini``` into ```C:\Users\Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\anyconnectControll.ini``` and update it with your profiles
 4) Start the ```anyconnectControll.ahk``` and enjoy
 
+![ciscoAnyconnectControll.png](ciscoAnyconnectControll.png "ciscoAnyconnectControll.png")
+
 Warning:
 This script expects you to have your user/pass in clear stored in the ini file. That might be a security concern.
